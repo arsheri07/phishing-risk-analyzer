@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scam Shield</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="page">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">▣</span>
+      <span class="brand-name">SCAM&nbsp;SHIELD</span>
+    </div>
+    <a class="repo-link" href="https://github.com/arsheri07/scam-shield" target="_blank" rel="noopener">
+      source ↗
+    </a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Case Intake — Report No. <span id="case-number">000000</span></p>
+      <h1>One score. Any kind of scam.</h1>
+      <p class="hero-sub">Paste an email, link, text message, call transcript, or app listing and get an instant, fully-explained risk verdict. Real SPF/DKIM/DMARC checks, lookalike-domain detection, domain age, SSL validity, and scam-language scoring — every point explained, nothing hidden.</p>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="email" role="tab" aria-selected="true">Email</button>
+        <button class="tab" data-tab="website" role="tab" aria-selected="false">Website</button>
+        <button class="tab" data-tab="sms" role="tab" aria-selected="false">Text Message</button>
+        <button class="tab" data-tab="phone" role="tab" aria-selected="false">Phone Call</button>
+        <button class="tab" data-tab="app" role="tab" aria-selected="false">App Listing</button>
+      </div>
+
+      <!-- ===== EMAIL TAB ===== -->
+      <div class="intake tab-panel active" data-panel="email">
+        <div class="intake-label">
+          <span>EXHIBIT A — RAW MESSAGE SOURCE</span>
+          <button id="load-sample-email" type="button" class="text-btn">load a sample →</button>
+        </div>
+        <textarea id="email-input" class="textarea-field" placeholder="Paste the full raw email source here (in Gmail: ⋮ menu → Show original. In Outlook: File → Properties → Internet headers, plus the body)."></textarea>
+
+        <div class="intake-controls">
+          <label class="toggle">
+            <input type="checkbox" id="live-toggle">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-label">Deep scan (live DNS + DKIM crypto verification — a few seconds slower)</span>
+          </label>
+          <button id="analyze-email-btn" class="analyze-btn" type="button">Analyze message</button>
+        </div>
+      </div>
+
+      <!-- ===== WEBSITE TAB ===== -->
+      <div class="intake tab-panel" data-panel="website">
+        <div class="intake-label">
+          <span>EXHIBIT B — URL TO CHECK</span>
+          <button id="load-sample-website" type="button" class="text-btn">load a sample →</button>
+        </div>
+        <div class="url-input-row">
+          <input id="url-input" type="text" class="text-field" placeholder="paste a URL, e.g. https://example.com/offer">
+        </div>
+
+        <div class="intake-controls">
+          <p class="url-note">Checks domain age, SSL certificate, redirect chain, lookalike-domain patterns, and scam-payment language on the page.</p>
+          <button id="analyze-website-btn" class="analyze-btn" type="button">Analyze site</button>
+        </div>
+      </div>
+
+      <!-- ===== SMS TAB ===== -->
+      <div class="intake tab-panel" data-panel="sms">
+        <div class="intake-label">
+          <span>EXHIBIT C — TEXT MESSAGE</span>
+          <button id="load-sample-sms" type="button" class="text-btn">load a sample →</button>
+        </div>
+        <textarea id="sms-input" class="textarea-field" placeholder="Paste the full text message here."></textarea>
+
+        <div class="intake-controls">
+          <p class="url-note">Checks for smishing phrases, OTP-forwarding requests, and suspicious links.</p>
+          <button id="analyze-sms-btn" class="analyze-btn" type="button">Analyze message</button>
+        </div>
+      </div>
+
+      <!-- ===== PHONE TAB ===== -->
+      <div class="intake tab-panel" data-panel="phone">
+        <div class="intake-label">
+          <span>EXHIBIT D — CALL TRANSCRIPT</span>
+          <button id="load-sample-phone" type="button" class="text-btn">load a sample →</button>
+        </div>
+        <div class="url-input-row">
+          <input id="phone-number-input" type="text" class="text-field" placeholder="Caller's phone number (optional)">
+        </div>
+        <textarea id="phone-input" class="textarea-field" placeholder="Type or paste what the caller said, as closely as you remember it."></textarea>
+
+        <div class="intake-controls">
+          <p class="url-note">Checks for agency-impersonation language, remote-access-software requests, and scam payment demands. Works from a typed transcript — no audio upload needed.</p>
+          <button id="analyze-phone-btn" class="analyze-btn" type="button">Analyze call</button>
+        </div>
+      </div>
+
+      <!-- ===== APP TAB ===== -->
+      <div class="intake tab-panel" data-panel="app">
+        <div class="intake-label">
+          <span>EXHIBIT E — APP LISTING</span>
+          <button id="load-sample-app" type="button" class="text-btn">load a sample →</button>
+        </div>
+        <div class="url-input-row">
+          <input id="app-name-input" type="text" class="text-field" placeholder="App name">
+        </div>
+        <div class="url-input-row">
+          <input id="app-developer-input" type="text" class="text-field" placeholder="Developer name">
+        </div>
+        <textarea id="app-description-input" class="textarea-field" placeholder="Paste the app's store description here."></textarea>
+        <div class="url-input-row">
+          <input id="app-permissions-input" type="text" class="text-field" placeholder="Requested permissions, comma-separated (e.g. Camera, Contacts, Location)">
+        </div>
+
+        <div class="intake-controls">
+          <p class="url-note">Checks for unrealistic financial claims, permission requests that don't match the app's own description, and generic developer names.</p>
+          <button id="analyze-app-btn" class="analyze-btn" type="button">Analyze listing</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="results" class="results hidden">
+
+      <div class="verdict-row">
+        <div id="stamp" class="stamp">
+          <span id="stamp-text">SAFE</span>
+        </div>
+        <div class="score-block">
+          <div class="score-number"><span id="score-value">0</span><span class="score-max">/100</span></div>
+          <div class="score-label">risk score</div>
+        </div>
+      </div>
+
+      <div class="report-grid">
+
+        <div class="card" id="summary-card">
+          <h2 class="card-title" id="summary-title">01 — Summary</h2>
+          <dl class="field-list" id="summary-fields"></dl>
+        </div>
+
+        <div class="card hidden" id="auth-card">
+          <h2 class="card-title">02 — Authentication</h2>
+          <dl class="field-list" id="auth-fields"></dl>
+        </div>
+
+        <div class="card hidden" id="links-card">
+          <h2 class="card-title">03 — Links</h2>
+          <div id="links-list" class="links-list"></div>
+        </div>
+
+        <div class="card card-wide">
+          <h2 class="card-title">04 — Findings</h2>
+          <ul id="reasons-list" class="reasons-list"></ul>
+        </div>
+
+      </div>
+    </section>
+
+    <section id="error-box" class="error-box hidden"></section>
+  </main>
+
+  <footer class="footer">
+    <p>Built by Akshithreddy Sheri. Every check runs against what you paste — nothing is uploaded or stored. <a href="https://github.com/arsheri07/scam-shield" target="_blank" rel="noopener">View source on GitHub</a>.</p>
+  </footer>
+
+</div>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

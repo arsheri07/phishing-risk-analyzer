@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --ink: #16305C;
+    --ink-soft: #4A5F82;
+    --paper: #F6F8FB;
+    --line: rgba(22, 48, 92, 0.16);
+    --safe: #1E8A6E; --safe-bg: #E4F2EC;
+    --warn: #B9791A; --warn-bg: #F6ECD9;
+    --danger: #B33A3A; --danger-bg: #F5E3E1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    width: 340px;
+    margin: 0;
+    padding: 14px;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, system-ui, sans-serif;
+    font-size: 13px;
+  }
+  h1 {
+    font-size: 14px;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .current-url {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    word-break: break-all;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  button {
+    width: 100%;
+    padding: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--ink);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: wait; }
+  #settings {
+    margin-top: 10px;
+    font-size: 11px;
+  }
+  #settings input {
+    width: 100%;
+    padding: 6px;
+    font-size: 11px;
+    font-family: monospace;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    margin-top: 4px;
+  }
+  #settings-link {
+    color: var(--ink-soft);
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 11px;
+  }
+  #result { margin-top: 12px; display: none; }
+  .stamp {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 2px solid currentColor;
+  }
+  .stamp.safe { color: var(--safe); background: var(--safe-bg); }
+  .stamp.suspicious { color: var(--warn); background: var(--warn-bg); }
+  .stamp.dangerous { color: var(--danger); background: var(--danger-bg); }
+  .score { font-weight: 600; margin-left: 8px; }
+  ul { margin: 8px 0 0; padding-left: 16px; }
+  li { margin-bottom: 4px; }
+  #error { color: var(--danger); margin-top: 10px; display: none; }
+</style>
+</head>
+<body>
+  <h1>▣ Scam Shield</h1>
+  <div class="current-url" id="current-url">Loading current tab...</div>
+  <button id="analyze-btn">Analyze this site</button>
+
+  <div id="result">
+    <span id="stamp" class="stamp">SAFE</span>
+    <span class="score" id="score">0/100</span>
+    <ul id="reasons"></ul>
+  </div>
+
+  <div id="error"></div>
+
+  <div id="settings">
+    <span id="settings-link">⚙ configure your Scam Shield server</span>
+    <div id="settings-form" style="display:none;">
+      <input id="backend-url" type="text" placeholder="https://your-scam-shield.onrender.com">
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

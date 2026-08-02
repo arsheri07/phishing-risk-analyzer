@@ -1,0 +1,7 @@
+Flask>=3.1.0
+dnspython>=2.8.0
+dkimpy>=1.1.8
+python-whois>=0.9.4
+requests>=2.31.0
+pytest>=8.0.0
+gunicorn>=21.2.0
