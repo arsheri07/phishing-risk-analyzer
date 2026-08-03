@@ -22,7 +22,7 @@ verdict. Five analysis modules share one scoring engine:
 A companion browser extension lets you check the current tab's URL
 without leaving your browser.
 
-**Live demo:** _add your deployed URL here once live_
+**Live demo:** [_add your deployed URL here once live_](https://scamshield-arsheri.onrender.com)
 
 ## Why I built this
 
