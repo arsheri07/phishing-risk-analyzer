@@ -87,7 +87,7 @@ Open `http://localhost:5000`. Every tab has a "load a sample" button.
 ```bash
 python3 -m pytest -v
 ```
-72 tests total, covering all five modules plus the Safe Browsing
+74 tests total, covering all five modules plus the Safe Browsing
 integration. Network-dependent logic (DNS, DKIM, WHOIS, Safe Browsing)
 is tested against mocked responses rather than live calls - this keeps
 the suite fast, reliable, and independent of network conditions,
@@ -114,6 +114,40 @@ See `SECURITY.md` for the full breakdown of how API keys are handled,
 what data this app does and doesn't store, and how the test suite
 directly verifies secrets never leak into logs or error messages.
 
+## Deployment
+
+This is a standard Flask app, already configured to run via
+`gunicorn` in production (see `Procfile`) rather than Flask's
+development server, so it deploys cleanly to any platform that
+supports Python web services.
+
+**Deploying on Render (free tier):**
+
+1. Push this repo to GitHub first (see below if you haven't yet)
+2. Go to [render.com](https://render.com) and sign in with your GitHub account
+3. **New +** → **Web Service** → select this repo
+4. Settings:
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `gunicorn app:app`
+   - **Instance Type:** Free
+5. **Create Web Service** and wait for "Your service is live" (2-5 minutes)
+6. Copy the live URL Render gives you and update the "Live demo" line
+   at the top of this README with it
+
+Note: Render's free tier spins down after ~15 minutes of inactivity
+and takes 30-60 seconds to wake back up on the next visit - expected
+behavior, not a bug, if it feels slow on a cold start.
+
+**Pushing this repo to GitHub, if you haven't yet:**
+```bash
+git init
+git add .
+git commit -m "Initial commit: Scam Shield unified scam-detection platform"
+git remote add origin https://github.com/YOUR-USERNAME/scam-shield.git
+git branch -M main
+git push -u origin main
+```
+
 ## What I'd add next
 
 - Live audio transcription for the Phone Call module (once/if a
@@ -125,4 +159,3 @@ directly verifies secrets never leak into logs or error messages.
 
 ---
 *Built by Akshithreddy Sheri — [github.com/arsheri07](https://github.com/arsheri07)*
-
