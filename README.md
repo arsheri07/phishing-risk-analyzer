@@ -2,11 +2,11 @@
 
 A unified scam-detection platform. Paste an email, link, text message,
 call transcript, or app listing — get an instant, fully-explained risk
-verdict. Five analysis modules share one scoring engine:
+assessment. Five analysis modules share one scoring engine:
 
-- **Email** — real SPF/DKIM/DMARC verification (including actual
-  cryptographic DKIM signature verification), lookalike-domain
-  detection on every link, urgency-language scoring
+- **Email** — SPF/DKIM/DMARC signals from mail-provider headers, with
+  optional DNS and cryptographic DKIM deep checks; lookalike-domain
+  detection on every link; urgency-language scoring
 - **Website** — domain age, SSL certificate validity, redirect chain
   length, scam-payment-language, optional Google Safe Browsing lookup,
   plus the same lookalike-domain detection reused from email
@@ -38,9 +38,10 @@ adding four more modules take a fraction of the time the first one did.
 
 ## What each module checks
 
-**Email:** SPF, DKIM (real cryptographic verification), DMARC,
-typosquatting/combosquatting on every link, Reply-To/From mismatch,
-urgency/pressure language.
+**Email:** SPF, DKIM, and DMARC results from the message's
+`Authentication-Results` header; optional deep checking of DNS records and
+the DKIM cryptographic signature; typosquatting/combosquatting on every link;
+Reply-To/From mismatch; urgency/pressure language.
 
 **Website:** domain age via WHOIS, SSL certificate presence, redirect
 chain length, scam-payment language, optional Google Safe Browsing
@@ -63,7 +64,7 @@ SMS access), generic/auto-generated developer names.
 
 The Website module can optionally check URLs against Google's threat
 database. This requires a free API key that **you provide yourself** -
-see `.env.example` and `SECURITY.md` for exactly how this is handled.
+see `SECURITY.md` for exactly how this is handled.
 Without a key configured, the app works fully - it just skips this one
 extra signal.
 
@@ -87,7 +88,7 @@ Open `http://localhost:5000`. Every tab has a "load a sample" button.
 ```bash
 python3 -m pytest -v
 ```
-74 tests total, covering all five modules plus the Safe Browsing
+82 tests total, covering all five modules plus the Safe Browsing
 integration. Network-dependent logic (DNS, DKIM, WHOIS, Safe Browsing)
 is tested against mocked responses rather than live calls - this keeps
 the suite fast, reliable, and independent of network conditions,
@@ -108,6 +109,17 @@ they're running on. The Phone Call module works from a typed
 transcript rather than live audio specifically to avoid a similar
 dependency on a paid, unreliable third-party transcription service.
 
+The Website module intentionally accepts only publicly reachable HTTP(S) URLs.
+Private, loopback, and internal-network addresses are blocked, including after
+redirects, so the service cannot be used to probe internal systems.
+
+For email, header-based authentication results are useful evidence from the
+receiving mail provider, not independent proof on their own. The optional deep
+scan independently verifies a DKIM signature when one is present and checks
+for SPF/DMARC DNS records. SPF record lookup does not fully evaluate whether a
+specific sending IP is authorized, because the raw message may not include a
+reliable connecting IP.
+
 ## Security
 
 See `SECURITY.md` for the full breakdown of how API keys are handled,
@@ -123,30 +135,17 @@ supports Python web services.
 
 **Deploying on Render (free tier):**
 
-1. Push this repo to GitHub first (see below if you haven't yet)
-2. Go to [render.com](https://render.com) and sign in with your GitHub account
-3. **New +** → **Web Service** → select this repo
-4. Settings:
+1. Go to [render.com](https://render.com) and sign in with your GitHub account
+2. **New +** → **Web Service** → select this repo
+3. Settings:
    - **Build Command:** `pip install -r requirements.txt`
    - **Start Command:** `gunicorn app:app`
    - **Instance Type:** Free
-5. **Create Web Service** and wait for "Your service is live" (2-5 minutes)
-6. Copy the live URL Render gives you and update the "Live demo" line
-   at the top of this README with it
+4. **Create Web Service** and wait for "Your service is live" (2-5 minutes)
 
 Note: Render's free tier spins down after ~15 minutes of inactivity
 and takes 30-60 seconds to wake back up on the next visit - expected
 behavior, not a bug, if it feels slow on a cold start.
-
-**Pushing this repo to GitHub, if you haven't yet:**
-```bash
-git init
-git add .
-git commit -m "Initial commit: Scam Shield unified scam-detection platform"
-git remote add origin https://github.com/YOUR-USERNAME/scam-shield.git
-git branch -M main
-git push -u origin main
-```
 
 ## What I'd add next
 
