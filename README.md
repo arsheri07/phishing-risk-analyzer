@@ -54,6 +54,8 @@ of one-time-code interception scams), shared link analysis.
 **Phone Call:** government/company impersonation phrases, remote-access
 software requests (AnyDesk, TeamViewer, etc. - a hallmark of
 tech-support scams), scam payment demands, urgency language.
+Caller numbers are optional and can be entered with or without spaces,
+parentheses, or dashes.
 
 **App Listing:** too-good-to-be-true financial claims ("guaranteed
 profit," "100% guaranteed"), permission requests mismatched against
@@ -88,7 +90,7 @@ Open `http://localhost:5000`. Every tab has a "load a sample" button.
 ```bash
 python3 -m pytest -v
 ```
-82 tests total, covering all five modules plus the Safe Browsing
+84 tests total, covering all five modules plus the Safe Browsing
 integration. Network-dependent logic (DNS, DKIM, WHOIS, Safe Browsing)
 is tested against mocked responses rather than live calls - this keeps
 the suite fast, reliable, and independent of network conditions,
