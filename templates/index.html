@@ -18,9 +18,12 @@
       <span class="brand-mark">▣</span>
       <span class="brand-name">SCAM&nbsp;SHIELD</span>
     </div>
-    <a class="repo-link" href="https://github.com/arsheri07/scam-shield" target="_blank" rel="noopener">
-      source ↗
-    </a>
+    <div class="topbar-actions">
+      <button id="clear-all-btn" class="clear-btn" type="button">clear all</button>
+      <a class="repo-link" href="https://github.com/arsheri07/scam-shield" target="_blank" rel="noopener">
+        source ↗
+      </a>
+    </div>
   </header>
 
   <main>
@@ -92,7 +95,7 @@
           <button id="load-sample-phone" type="button" class="text-btn">load a sample →</button>
         </div>
         <div class="url-input-row">
-          <input id="phone-number-input" type="text" class="text-field" placeholder="Caller's phone number (optional)">
+          <input id="phone-number-input" type="tel" inputmode="tel" autocomplete="tel" class="text-field" placeholder="Caller's phone number (optional — dashes not required)">
         </div>
         <textarea id="phone-input" class="textarea-field" placeholder="Type or paste what the caller said, as closely as you remember it."></textarea>
 

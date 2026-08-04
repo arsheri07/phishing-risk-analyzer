@@ -75,6 +75,19 @@ body {
   border-bottom: 1px solid transparent;
 }
 .repo-link:hover { border-bottom-color: var(--ink-soft); }
+.topbar-actions { display: flex; align-items: center; gap: 18px; }
+.clear-btn {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 13px;
+  cursor: pointer;
+}
+.clear-btn:hover { text-decoration: underline; }
+.clear-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* ============================================================
    TABS
@@ -332,6 +345,7 @@ h1 {
   overflow: hidden;
   box-shadow: var(--shadow-md);
 }
+.report-grid.single-column { grid-template-columns: 1fr; }
 
 .card {
   background: #fff;

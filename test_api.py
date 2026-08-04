@@ -30,6 +30,15 @@ def test_all_local_analysis_apis_accept_representative_samples():
         assert response.get_json()["verdict"] == "DANGEROUS"
 
 
+def test_phone_api_normalizes_an_unformatted_caller_number():
+    response = app.test_client().post("/api/analyze/phone", json={
+        "phone_number": "2025550199",
+        "transcript": "Hi, this is Sarah confirming your dentist appointment.",
+    })
+    assert response.status_code == 200
+    assert response.get_json()["summary"]["phone_number"] == "+1-202-555-0199"
+
+
 def test_website_api_rejects_internal_targets_before_fetching():
     response = app.test_client().post("/api/analyze/website", json={"url": "http://127.0.0.1/admin"})
     assert response.status_code == 400

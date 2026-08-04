@@ -65,6 +65,25 @@ document.getElementById('load-sample-app').addEventListener('click', () => {
 // ---------- Shared helpers ----------
 const resultsSection = document.getElementById('results');
 const errorBox = document.getElementById('error-box');
+const reportGrid = document.querySelector('.report-grid');
+
+function setResultCards({ auth = false, links = false } = {}) {
+  document.getElementById('auth-card').classList.toggle('hidden', !auth);
+  document.getElementById('links-card').classList.toggle('hidden', !links);
+  reportGrid.classList.toggle('single-column', !auth && !links);
+}
+
+document.getElementById('clear-all-btn').addEventListener('click', () => {
+  [
+    'email-input', 'url-input', 'sms-input', 'phone-number-input', 'phone-input',
+    'app-name-input', 'app-developer-input', 'app-description-input', 'app-permissions-input',
+  ].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('live-toggle').checked = false;
+  errorBox.classList.add('hidden');
+  resultsSection.classList.add('hidden');
+  const activePanel = document.querySelector('.tab-panel.active');
+  activePanel.querySelector('textarea, input:not([type="checkbox"])')?.focus();
+});
 
 function showError(message) {
   errorBox.textContent = message;
@@ -149,8 +168,7 @@ function renderEmailResults(data) {
     <div><dt>Subject</dt><dd>${escapeHtml(data.email_summary.subject)}</dd></div>
   `;
 
-  const authCard = document.getElementById('auth-card');
-  authCard.classList.remove('hidden');
+  setResultCards({ auth: true, links: true });
   const pillClass = (v) => (v === 'pass' ? 'pass' : (v === 'fail' ? 'fail' : 'none'));
   document.getElementById('auth-fields').innerHTML = `
     <div><dt>SPF</dt><dd><span class="pill ${pillClass(data.auth.spf)}">${escapeHtml(data.auth.spf)}</span></dd></div>
@@ -159,8 +177,6 @@ function renderEmailResults(data) {
     <div><dt>Source</dt><dd>${data.auth.source === 'live' ? 'Live verification' : 'Header only'}</dd></div>
   `;
 
-  const linksCard = document.getElementById('links-card');
-  linksCard.classList.remove('hidden');
   const linksList = document.getElementById('links-list');
   if (data.links.length === 0) {
     linksList.innerHTML = '<p class="no-links">No links found in this message.</p>';
@@ -229,8 +245,7 @@ function renderWebsiteResults(data) {
     ${data.site_summary.fetch_error ? `<div><dt>Fetch error</dt><dd>${escapeHtml(data.site_summary.fetch_error)}</dd></div>` : ''}
   `;
 
-  document.getElementById('auth-card').classList.add('hidden');
-  document.getElementById('links-card').classList.add('hidden');
+  setResultCards();
 
   renderReasons(data.reasons);
   resultsSection.classList.remove('hidden');
@@ -263,8 +278,7 @@ analyzeSmsBtn.addEventListener('click', async () => {
       <div><dt>Links found</dt><dd>${data.summary.link_count}</dd></div>
       <div><dt>OTP forward request</dt><dd><span class="pill ${data.summary.requests_otp_forwarding ? 'fail' : 'pass'}">${data.summary.requests_otp_forwarding ? 'detected' : 'none'}</span></dd></div>
     `;
-    document.getElementById('auth-card').classList.add('hidden');
-    document.getElementById('links-card').classList.add('hidden');
+    setResultCards();
     renderReasons(data.reasons);
     resultsSection.classList.remove('hidden');
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -304,8 +318,7 @@ analyzePhoneBtn.addEventListener('click', async () => {
       <div><dt>Agency impersonation</dt><dd>${data.summary.matched_agency_phrases.length ? escapeHtml(data.summary.matched_agency_phrases.join(', ')) : 'none detected'}</dd></div>
       <div><dt>Remote access request</dt><dd>${data.summary.matched_remote_access.length ? escapeHtml(data.summary.matched_remote_access.join(', ')) : 'none detected'}</dd></div>
     `;
-    document.getElementById('auth-card').classList.add('hidden');
-    document.getElementById('links-card').classList.add('hidden');
+    setResultCards();
     renderReasons(data.reasons);
     resultsSection.classList.remove('hidden');
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -348,8 +361,7 @@ analyzeAppBtn.addEventListener('click', async () => {
       <div><dt>Developer</dt><dd>${escapeHtml(data.summary.developer_name || '(not provided)')} ${data.summary.generic_developer_name ? '<span class="pill fail">generic pattern</span>' : ''}</dd></div>
       <div><dt>Permissions</dt><dd>${data.summary.permissions.length ? escapeHtml(data.summary.permissions.join(', ')) : '(none listed)'}</dd></div>
     `;
-    document.getElementById('auth-card').classList.add('hidden');
-    document.getElementById('links-card').classList.add('hidden');
+    setResultCards();
     renderReasons(data.reasons);
     resultsSection.classList.remove('hidden');
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });

@@ -44,6 +44,27 @@ PAYMENT_DEMAND_PHRASES = [
 ]
 
 
+def normalize_phone_number(phone_number: str) -> str:
+    """Return a consistent display form without rejecting ordinary input.
+
+    Phone numbers are optional context, so users can enter ``2025550199``,
+    ``(202) 555-0199``, or ``+1 202 555 0199`` interchangeably. Ten-digit
+    North American numbers are displayed in E.164-style form; international
+    numbers retain their country code without guessing a national format.
+    """
+    value = (phone_number or "").strip()
+    if not value:
+        return ""
+    digits = re.sub(r"\D", "", value)
+    if len(digits) == 10:
+        return f"+1-{digits[:3]}-{digits[3:6]}-{digits[6:]}"
+    if len(digits) == 11 and digits.startswith("1"):
+        return f"+1-{digits[1:4]}-{digits[4:7]}-{digits[7:]}"
+    if value.startswith("+") or value.startswith("00"):
+        return "+" + (digits[2:] if value.startswith("00") else digits)
+    return value
+
+
 @dataclass
 class PhoneReport:
     transcript: str
@@ -99,7 +120,7 @@ def analyze_phone_call(transcript: str, phone_number: str = "") -> tuple:
     text_lower = transcript or ""
     report = PhoneReport(
         transcript=transcript,
-        phone_number=phone_number,
+        phone_number=normalize_phone_number(phone_number),
         matched_agency_phrases=find_phrases(text_lower, AGENCY_IMPERSONATION_PHRASES),
         matched_remote_access=find_phrases(text_lower, REMOTE_ACCESS_SOFTWARE),
         matched_payment_phrases=find_phrases(text_lower, PAYMENT_DEMAND_PHRASES),

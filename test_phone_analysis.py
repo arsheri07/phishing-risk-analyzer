@@ -1,6 +1,6 @@
 from phone_analysis import (
     analyze_phone_call, score_agency_impersonation,
-    score_remote_access_request, score_payment_demand,
+    score_remote_access_request, score_payment_demand, normalize_phone_number,
 )
 
 
@@ -47,3 +47,9 @@ def test_full_clean_call_scores_safe():
 def test_empty_transcript_handled_without_crash():
     report, result = analyze_phone_call("")
     assert result.verdict == "SAFE"
+
+
+def test_phone_numbers_are_normalized_when_users_omit_separators():
+    assert normalize_phone_number("2025550199") == "+1-202-555-0199"
+    assert normalize_phone_number("(202) 555-0199") == "+1-202-555-0199"
+    assert normalize_phone_number("+44 20 7946 0958") == "+442079460958"
