@@ -17,6 +17,12 @@ def test_no_urgency_language_scores_zero():
     text = "Hi, just checking in about our meeting tomorrow."
     points, matched = score_urgency_language(text)
     assert points == 0
+
+
+def test_urgency_matching_does_not_flag_a_phrase_inside_another_word():
+    points, matched = score_urgency_language("Please contact now if you need help.")
+    assert points == 0
+    assert matched == []
     assert matched == []
 
 

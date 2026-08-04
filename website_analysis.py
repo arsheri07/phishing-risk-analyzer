@@ -20,9 +20,10 @@ Email Forensics, and adds checks specific to live websites:
 import ssl
 import socket
 import re
+import ipaddress
 from datetime import datetime, timezone
 from dataclasses import dataclass
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import requests
 import whois as whois_lib
@@ -56,6 +57,33 @@ SCAM_PAYMENT_PHRASES = [
     "no refunds", "payment must be sent first",
 ]
 
+MAX_REDIRECTS = 5
+
+
+def _is_public_target(url: str) -> bool:
+    """Reject loopback, private, and otherwise non-public fetch targets.
+
+    Website analysis is performed server-side, so accepting internal addresses
+    would turn this feature into an SSRF primitive. Resolve hostnames before
+    every request (including redirects) rather than trusting only the first
+    URL the user submitted.
+    """
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        return False
+    hostname = parsed.hostname.rstrip(".").lower()
+    if hostname == "localhost":
+        return False
+    try:
+        addresses = {item[4][0] for item in socket.getaddrinfo(hostname, None)}
+    except socket.gaierror:
+        # Let the normal fetch path report an unavailable public hostname.
+        return True
+    try:
+        return bool(addresses) and all(ipaddress.ip_address(address).is_global for address in addresses)
+    except ValueError:
+        return False
+
 
 def fetch_website(url: str, timeout: int = 8) -> WebsiteReport:
     """Fetches a URL, following redirects, and captures what we need
@@ -63,7 +91,9 @@ def fetch_website(url: str, timeout: int = 8) -> WebsiteReport:
     rather than raised, so a dead/unreachable site is itself a
     reportable finding, not a crash."""
     parsed = urlparse(url)
-    domain = parsed.netloc.lower().split(":")[0]
+    domain = (parsed.hostname or "").lower()
+    if not _is_public_target(url):
+        raise ValueError("Website analysis only supports publicly reachable HTTP(S) URLs")
 
     redirect_chain = []
     final_url = url
@@ -71,15 +101,31 @@ def fetch_website(url: str, timeout: int = 8) -> WebsiteReport:
     fetch_error = ""
 
     try:
-        response = requests.get(
-            url, timeout=timeout, allow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0 (compatible; ScamShield/1.0)"}
-        )
-        redirect_chain = [r.url for r in response.history] + [response.url]
-        final_url = response.url
-        page_text = response.text[:5000]  # cap - we only need a sample for language scoring
-    except requests.exceptions.RequestException as e:
-        fetch_error = str(e)
+        current_url = url
+        for _ in range(MAX_REDIRECTS + 1):
+            if not _is_public_target(current_url):
+                raise ValueError("Redirect target is not publicly reachable")
+            response = requests.get(
+                current_url, timeout=timeout, allow_redirects=False,
+                headers={"User-Agent": "Mozilla/5.0 (compatible; ScamShield/1.0)"}
+            )
+            redirect_chain.append(response.url)
+            if not response.is_redirect:
+                final_url = response.url
+                page_text = response.text[:5000]
+                break
+            location = response.headers.get("Location")
+            if not location:
+                final_url = response.url
+                break
+            current_url = urljoin(response.url, location)
+        else:
+            fetch_error = f"Redirect limit of {MAX_REDIRECTS} exceeded"
+    except requests.exceptions.RequestException:
+        # Network and proxy exception strings can expose server-specific
+        # internals. The report only needs to communicate that this signal
+        # could not be verified.
+        fetch_error = "The site could not be reached or verified"
 
     domain_age_days = -1
     try:

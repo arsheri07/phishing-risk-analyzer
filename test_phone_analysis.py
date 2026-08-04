@@ -15,6 +15,11 @@ def test_no_agency_impersonation_in_normal_call():
     assert reasons == []
 
 
+def test_normal_word_containing_irs_does_not_flag_government_impersonation():
+    reasons = score_agency_impersonation("This is my first appointment with the dentist.")
+    assert reasons == []
+
+
 def test_remote_access_request_detected():
     reasons = score_remote_access_request("Please install AnyDesk so I can access your computer.")
     assert len(reasons) == 1

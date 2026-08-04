@@ -10,6 +10,7 @@ Nothing is a black-box number - if a report is flagged HIGH risk, the
 person using it should be able to see exactly why.
 """
 
+import re
 from dataclasses import dataclass, field
 
 
@@ -37,6 +38,22 @@ URGENCY_PHRASES = [
 ]
 
 
+def find_phrases(text: str, phrases: list[str]) -> list[str]:
+    """Return complete phrase matches, avoiding substring false positives.
+
+    Security terms are often short (for example, ``irs``). A raw
+    ``phrase in text`` check would flag harmless words such as ``first``.
+    Boundaries also keep ``contact now`` from matching the separate phrase
+    ``act now``.
+    """
+    if not text:
+        return []
+    return [
+        phrase for phrase in phrases
+        if re.search(r"(?<!\w)" + re.escape(phrase) + r"(?!\w)", text, re.IGNORECASE)
+    ]
+
+
 def score_urgency_language(text: str) -> tuple:
     """Scans body text for pressure/urgency phrases. Returns (score
     contribution, list of matched phrases). Case-insensitive since
@@ -44,8 +61,7 @@ def score_urgency_language(text: str) -> tuple:
     if not text:
         return 0, []
 
-    text_lower = text.lower()
-    matched = [phrase for phrase in URGENCY_PHRASES if phrase in text_lower]
+    matched = find_phrases(text, URGENCY_PHRASES)
 
     # Diminishing returns per additional phrase - 3 urgency phrases
     # isn't 3x as suspicious as 1, but it's still worse than 1

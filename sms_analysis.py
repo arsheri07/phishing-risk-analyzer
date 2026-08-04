@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass
 
 from link_analysis import analyze_links
-from scoring import ScoreReason, score_urgency_language, compute_verdict, AnalysisResult
+from scoring import ScoreReason, find_phrases, score_urgency_language, compute_verdict, AnalysisResult
 
 
 # Patterns specific to SMS scams that don't overlap much with email
@@ -45,8 +45,7 @@ class SmsReport:
 def score_smishing_phrases(text: str) -> tuple:
     if not text:
         return 0, []
-    text_lower = text.lower()
-    matched = [p for p in SMISHING_PHRASES if p in text_lower]
+    matched = find_phrases(text, SMISHING_PHRASES)
     points = min(len(matched) * 10, 30)
     return points, matched
 

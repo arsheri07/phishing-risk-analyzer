@@ -1,6 +1,6 @@
 from website_analysis import (
     WebsiteReport, score_domain_age, score_ssl, score_redirect_chain,
-    score_payment_language, score_domain_lookalike, score_ip_address_url,
+    score_payment_language, score_domain_lookalike, score_ip_address_url, _is_public_target,
 )
 
 
@@ -93,6 +93,24 @@ def test_ip_address_domain_flagged():
 def test_normal_domain_not_flagged_as_ip():
     reasons = score_ip_address_url("example.com")
     assert reasons == []
+
+
+def test_private_and_loopback_fetch_targets_are_rejected():
+    assert _is_public_target("http://127.0.0.1/admin") is False
+    assert _is_public_target("http://192.168.1.1/") is False
+    assert _is_public_target("http://localhost/") is False
+
+
+def test_fetch_errors_are_safe_for_user_facing_reports(monkeypatch):
+    import requests
+    from website_analysis import fetch_website
+
+    monkeypatch.setattr("website_analysis._is_public_target", lambda url: True)
+    monkeypatch.setattr("website_analysis.requests.get", lambda *args, **kwargs: (_ for _ in ()).throw(
+        requests.exceptions.ConnectionError("internal proxy hostname should not be shown")
+    ))
+    report = fetch_website("https://example.com")
+    assert report.fetch_error == "The site could not be reached or verified"
 
 
 def test_full_scam_scenario_scores_dangerous():

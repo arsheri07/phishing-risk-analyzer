@@ -16,7 +16,7 @@ functions can be reused as-is on the resulting transcript text.
 import re
 from dataclasses import dataclass
 
-from scoring import ScoreReason, score_urgency_language, compute_verdict, AnalysisResult
+from scoring import ScoreReason, find_phrases, score_urgency_language, compute_verdict, AnalysisResult
 
 
 # Impersonation of government agencies is one of the single most
@@ -56,8 +56,7 @@ class PhoneReport:
 def score_agency_impersonation(text: str) -> list:
     if not text:
         return []
-    text_lower = text.lower()
-    matched = [p for p in AGENCY_IMPERSONATION_PHRASES if p in text_lower]
+    matched = find_phrases(text, AGENCY_IMPERSONATION_PHRASES)
     if matched:
         return [ScoreReason(35, f"Mentions government/company impersonation patterns commonly used in scam calls ({', '.join(matched[:3])})")]
     return []
@@ -66,8 +65,7 @@ def score_agency_impersonation(text: str) -> list:
 def score_remote_access_request(text: str) -> list:
     if not text:
         return []
-    text_lower = text.lower()
-    matched = [p for p in REMOTE_ACCESS_SOFTWARE if p in text_lower]
+    matched = find_phrases(text, REMOTE_ACCESS_SOFTWARE)
     if matched:
         return [ScoreReason(35, f"Requests installing remote-access software ({', '.join(matched)}) - a hallmark of tech-support scams; legitimate support rarely cold-calls asking for this")]
     return []
@@ -76,8 +74,7 @@ def score_remote_access_request(text: str) -> list:
 def score_payment_demand(text: str) -> list:
     if not text:
         return []
-    text_lower = text.lower()
-    matched = [p for p in PAYMENT_DEMAND_PHRASES if p in text_lower]
+    matched = find_phrases(text, PAYMENT_DEMAND_PHRASES)
     if matched:
         return [ScoreReason(30, f"Demands payment via method(s) commonly used in scams ({', '.join(matched[:3])}) - untraceable and irreversible")]
     return []
@@ -99,13 +96,13 @@ def analyze_phone_call(transcript: str, phone_number: str = "") -> tuple:
     total_score = min(sum(r.points for r in reasons), 100)
     verdict = compute_verdict(total_score)
 
-    text_lower = (transcript or "").lower()
+    text_lower = transcript or ""
     report = PhoneReport(
         transcript=transcript,
         phone_number=phone_number,
-        matched_agency_phrases=[p for p in AGENCY_IMPERSONATION_PHRASES if p in text_lower],
-        matched_remote_access=[p for p in REMOTE_ACCESS_SOFTWARE if p in text_lower],
-        matched_payment_phrases=[p for p in PAYMENT_DEMAND_PHRASES if p in text_lower],
+        matched_agency_phrases=find_phrases(text_lower, AGENCY_IMPERSONATION_PHRASES),
+        matched_remote_access=find_phrases(text_lower, REMOTE_ACCESS_SOFTWARE),
+        matched_payment_phrases=find_phrases(text_lower, PAYMENT_DEMAND_PHRASES),
     )
 
     return report, AnalysisResult(verdict=verdict, score=total_score, reasons=reasons)

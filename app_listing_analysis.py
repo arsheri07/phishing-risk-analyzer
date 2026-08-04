@@ -16,7 +16,7 @@ financial claims, generic developer names).
 import re
 from dataclasses import dataclass
 
-from scoring import ScoreReason, compute_verdict, AnalysisResult
+from scoring import ScoreReason, find_phrases, compute_verdict, AnalysisResult
 
 
 # Financial/investment apps promising guaranteed, risk-free, or
@@ -63,8 +63,7 @@ class AppListingReport:
 def score_too_good_to_be_true(description: str) -> list:
     if not description:
         return []
-    text_lower = description.lower()
-    matched = [p for p in TOO_GOOD_TO_BE_TRUE_PHRASES if p in text_lower]
+    matched = find_phrases(description, TOO_GOOD_TO_BE_TRUE_PHRASES)
     if matched:
         return [ScoreReason(35, f"Description makes unrealistic financial claims ({', '.join(matched[:3])}) - a strong indicator of a fake investment/earning app")]
     return []
@@ -119,11 +118,11 @@ def analyze_app_listing(app_name: str, developer_name: str, description: str, pe
     total_score = min(sum(r.points for r in reasons), 100)
     verdict = compute_verdict(total_score)
 
-    text_lower = (description or "").lower()
+    text_lower = description or ""
     report = AppListingReport(
         app_name=app_name, developer_name=developer_name, description=description,
         permissions=permissions,
-        matched_ttgt_phrases=[p for p in TOO_GOOD_TO_BE_TRUE_PHRASES if p in text_lower],
+        matched_ttgt_phrases=find_phrases(text_lower, TOO_GOOD_TO_BE_TRUE_PHRASES),
         permission_mismatch=bool(score_permission_mismatch(description, permissions)),
         generic_developer_name=bool(GENERIC_DEVELOPER_PATTERN.match((developer_name or "").strip())),
     )

@@ -63,6 +63,13 @@ def test_ip_address_link_flagged():
     assert findings[0].is_ip_address is True
 
 
+def test_ipv6_link_and_trailing_punctuation_are_handled_correctly():
+    findings = analyze_links("Safe: https://paypal.com. Risky: http://[2001:db8::1]/login.")
+    by_domain = {finding.domain: finding for finding in findings}
+    assert by_domain["paypal.com"].is_combosquat is False
+    assert by_domain["2001:db8::1"].is_ip_address is True
+
+
 def test_url_shortener_flagged():
     findings = analyze_links("Click http://bit.ly/abc123")
     assert len(findings) == 1

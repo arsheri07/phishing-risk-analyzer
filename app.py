@@ -102,6 +102,8 @@ def api_analyze_website():
 
     try:
         report, result = analyze_website(url)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": f"Could not analyze site: {e}"}), 500
 

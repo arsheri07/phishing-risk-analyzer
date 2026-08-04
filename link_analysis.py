@@ -13,6 +13,7 @@ haven't been seen before, not just known-bad exact matches.
 """
 
 import re
+import ipaddress
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
@@ -47,7 +48,14 @@ class LinkFinding:
 URL_SHORTENERS = {"bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly",
                    "is.gd", "buff.ly", "rebrand.ly", "shorturl.at"}
 
-_IP_PATTERN = re.compile(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
+
+def _is_ip_address(domain: str) -> bool:
+    """Recognize valid IPv4 and IPv6 literals without treating 999.1.1.1 as one."""
+    try:
+        ipaddress.ip_address(domain)
+        return True
+    except ValueError:
+        return False
 
 
 def _levenshtein(a: str, b: str) -> int:
@@ -76,7 +84,7 @@ def extract_urls(text: str, html: str = "") -> list:
     bodies matter because a phishing email's visible link text can say
     'paypal.com' while the actual href underneath points somewhere
     else entirely - so we specifically also look inside href attributes."""
-    urls = set(URL_PATTERN.findall(text or ""))
+    urls = {url.rstrip(".,;:!?") for url in URL_PATTERN.findall(text or "")}
 
     if html:
         href_pattern = re.compile(r'href=["\']([^"\']+)["\']', re.IGNORECASE)
@@ -174,16 +182,16 @@ def analyze_links(text_body: str, html_body: str = "") -> list:
     for url in urls:
         try:
             parsed = urlparse(url)
-            domain = parsed.netloc.lower()
-            # strip port number if present, e.g. "example.com:8080"
-            domain = domain.split(":")[0]
+            # hostname handles userinfo and ports correctly and avoids treating
+            # a trailing root-domain dot as a different domain.
+            domain = (parsed.hostname or "").rstrip(".").lower()
         except Exception:
             continue
 
         if not domain:
             continue
 
-        is_ip = bool(_IP_PATTERN.match(domain))
+        is_ip = _is_ip_address(domain)
         is_shortener = domain in URL_SHORTENERS
 
         is_typo, target, distance = (False, "", 0) if is_ip else check_typosquat(domain)
