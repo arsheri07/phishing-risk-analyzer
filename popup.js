@@ -1,5 +1,5 @@
 // SECURITY NOTE: this extension never sends anything to any server
-// except the one YOU configure below (your own deployed Scam Shield
+// except the one YOU configure below (your own deployed Phishing Risk Analyzer
 // backend). It has no hardcoded server, no API keys, and no analytics.
 // The only permission it requests is reading the active tab's URL.
 
@@ -37,7 +37,7 @@ document.getElementById("analyze-btn").addEventListener("click", async () => {
   const backendUrl = (stored.backendUrl || "").replace(/\/$/, "");
 
   if (!backendUrl) {
-    errorBox.textContent = "Set your Scam Shield server URL below first (⚙ configure).";
+    errorBox.textContent = "Set your Phishing Risk Analyzer server URL below first (⚙ configure).";
     errorBox.style.display = "block";
     document.getElementById("settings-form").style.display = "block";
     return;
@@ -81,7 +81,7 @@ document.getElementById("analyze-btn").addEventListener("click", async () => {
     }
     resultBox.style.display = "block";
   } catch (err) {
-    errorBox.textContent = "Could not reach your Scam Shield server. Check the URL in settings.";
+    errorBox.textContent = "Could not reach your Phishing Risk Analyzer server. Check the URL in settings.";
     errorBox.style.display = "block";
   } finally {
     btn.disabled = false;

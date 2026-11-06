@@ -1,7 +1,7 @@
 """
 app.py
 ------
-Scam Shield - unified scam detection platform.
+Phishing Risk Analyzer - unified scam detection platform.
 
 Two analysis modules sharing one scoring engine:
 - Email tab: SPF/DKIM/DMARC verification, lookalike-domain detection,

@@ -107,7 +107,7 @@ def fetch_website(url: str, timeout: int = 8) -> WebsiteReport:
                 raise ValueError("Redirect target is not publicly reachable")
             response = requests.get(
                 current_url, timeout=timeout, allow_redirects=False,
-                headers={"User-Agent": "Mozilla/5.0 (compatible; ScamShield/1.0)"}
+                headers={"User-Agent": "Mozilla/5.0 (compatible; PhishingRiskAnalyzer/1.0)"}
             )
             redirect_chain.append(response.url)
             if not response.is_redirect:

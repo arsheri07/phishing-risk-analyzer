@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Scam Shield",
+  "name": "Phishing Risk Analyzer",
   "version": "1.0.0",
   "description": "Check the current website for scam risk signals - domain age, SSL, lookalike-domain detection, and more.",
   "permissions": ["activeTab", "storage"],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Scam Shield - check this site"
+    "default_title": "Phishing Risk Analyzer - check this site"
   }
 }

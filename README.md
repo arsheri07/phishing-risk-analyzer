@@ -1,4 +1,4 @@
-# Scam Shield
+# Phishing Risk Analyzer
 
 A unified scam-detection platform. Paste an email, link, text message,
 call transcript, or app listing — get an instant, fully-explained risk
@@ -22,7 +22,7 @@ assessment. Five analysis modules share one scoring engine:
 A companion browser extension lets you check the current tab's URL
 without leaving your browser.
 
-**Live demo:** [Scam-Shield](https://scamshield-arsheri.onrender.com)
+**Live demo:** [Phishing Risk Analyzer](https://scamshield-arsheri.onrender.com)
 
 ## Why I built this
 

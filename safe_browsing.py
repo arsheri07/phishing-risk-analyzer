@@ -47,7 +47,7 @@ def check_url(url: str, timeout: int = 5) -> dict:
         return {"checked": False, "is_threat": False, "threat_types": [], "error": "not_configured"}
 
     payload = {
-        "client": {"clientId": "scam-shield", "clientVersion": "1.0"},
+        "client": {"clientId": "phishing-risk-analyzer", "clientVersion": "1.0"},
         "threatInfo": {
             "threatTypes": ["MALWARE", "SOCIAL_ENGINEERING", "UNWANTED_SOFTWARE", "POTENTIALLY_HARMFUL_APPLICATION"],
             "platformTypes": ["ANY_PLATFORM"],
