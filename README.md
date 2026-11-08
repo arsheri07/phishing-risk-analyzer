@@ -1,5 +1,7 @@
 # Phishing Risk Analyzer
 
+[![CI](https://github.com/arsheri07/phishing-risk-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/arsheri07/phishing-risk-analyzer/actions/workflows/ci.yml)
+
 A unified scam-detection platform. Paste an email, link, text message,
 call transcript, or app listing — get an instant, fully-explained risk
 assessment. Five analysis modules share one scoring engine:
@@ -22,7 +24,7 @@ assessment. Five analysis modules share one scoring engine:
 A companion browser extension lets you check the current tab's URL
 without leaving your browser.
 
-**Live demo:** [Phishing Risk Analyzer](https://scamshield-arsheri.onrender.com)
+**Live demo:** [phishing-risk-analyzer-suk0.onrender.com](https://phishing-risk-analyzer-suk0.onrender.com) (free tier: the first visit after a quiet period can take ~50 seconds to wake up)
 
 ## Why I built this
 
