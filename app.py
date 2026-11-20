@@ -84,6 +84,9 @@ def api_analyze_email():
                 "is_typosquat": f.is_typosquat, "typosquat_target": f.typosquat_target,
                 "is_combosquat": f.is_combosquat, "combosquat_target": f.combosquat_target,
                 "is_ip_address": f.is_ip_address, "uses_url_shortener": f.uses_url_shortener,
+                "is_homograph": f.is_homograph, "homograph_target": f.homograph_target,
+                "unicode_domain": f.unicode_domain, "is_mixed_script": f.is_mixed_script,
+                "display_domain": f.display_domain,
             }
             for f in link_findings
         ],

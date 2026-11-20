@@ -25,6 +25,11 @@
 - Website URLs you check are fetched live (to check domain age, SSL,
   redirects) - only the URL you provide is contacted, nothing else.
 - No user accounts, no cookies, no tracking, no analytics.
+- The **case log** is kept in your browser's `sessionStorage`, never sent
+  to the server, and erased when the tab closes (or with "clear log"). It
+  stores only a short subject line (an email's Subject, a URL, the first
+  60 characters of a text) plus the verdict and findings - never the full
+  pasted message.
 
 ## Personal information
 

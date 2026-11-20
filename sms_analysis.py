@@ -12,7 +12,8 @@ import re
 from dataclasses import dataclass
 
 from link_analysis import analyze_links
-from scoring import ScoreReason, find_phrases, score_urgency_language, compute_verdict, AnalysisResult
+from scoring import (ScoreReason, find_phrases, score_urgency_language, compute_verdict,
+                     AnalysisResult, homograph_reason, mixed_script_reason)
 
 
 # Patterns specific to SMS scams that don't overlap much with email
@@ -78,6 +79,10 @@ def analyze_sms(message: str) -> tuple:
         reasons.append(ScoreReason(urgency_points, f"Contains urgency/pressure language ({phrase_list})"))
 
     for link in links:
+        if link.is_homograph:
+            reasons.append(homograph_reason(link.domain, link.unicode_domain, link.homograph_target))
+        elif link.is_mixed_script:
+            reasons.append(mixed_script_reason(link.unicode_domain))
         if link.is_typosquat:
             reasons.append(ScoreReason(30, f"Link domain '{link.domain}' closely resembles '{link.typosquat_target}' - likely impersonation"))
         if link.is_combosquat:

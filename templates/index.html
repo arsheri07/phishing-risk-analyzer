@@ -16,7 +16,7 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-mark">▣</span>
-      <span class="brand-name">SCAM&nbsp;SHIELD</span>
+      <span class="brand-name">PHISHING&nbsp;RISK&nbsp;ANALYZER</span>
     </div>
     <div class="topbar-actions">
       <button id="clear-all-btn" class="clear-btn" type="button">clear all</button>
@@ -139,6 +139,7 @@
           <div class="score-number"><span id="score-value">0</span><span class="score-max">/100</span></div>
           <div class="score-label">risk score</div>
         </div>
+        <button id="copy-report-btn" class="copy-report-btn" type="button">copy report</button>
       </div>
 
       <div class="report-grid">
@@ -167,6 +168,15 @@
     </section>
 
     <section id="error-box" class="error-box hidden"></section>
+
+    <section id="case-log" class="case-log hidden" aria-labelledby="case-log-title">
+      <div class="case-log-head">
+        <h2 id="case-log-title" class="card-title">Case log — this session</h2>
+        <button id="clear-log-btn" class="text-btn" type="button">clear log</button>
+      </div>
+      <p class="case-log-note">Kept only in this browser tab and gone when you close it. Click a case to reopen its findings.</p>
+      <ol id="case-log-list" class="case-log-list"></ol>
+    </section>
   </main>
 
   <footer class="footer">

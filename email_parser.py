@@ -38,6 +38,24 @@ def _get_body(msg: Message) -> tuple[str, str]:
     text_body = ""
     html_body = ""
 
+    def _decode(part):
+        """Body text of one MIME part.
+
+        When a pasted message has no transfer encoding (7bit/8bit/none), the
+        payload is already text. get_payload(decode=True) would re-encode any
+        non-ASCII characters as raw-unicode-escape, turning a Cyrillic 'а'
+        into the literal six characters '\\u0430' - which hides exactly the
+        lookalike letters homograph detection needs to see.
+        """
+        cte = str(part.get("Content-Transfer-Encoding", "")).lower().strip()
+        raw = part.get_payload(decode=False)
+        if isinstance(raw, str) and cte in ("", "7bit", "8bit", "binary"):
+            return raw
+        payload = part.get_payload(decode=True)
+        if payload is None:
+            return None
+        return payload.decode(part.get_content_charset() or "utf-8", errors="replace")
+
     if msg.is_multipart():
         for part in msg.walk():
             content_type = part.get_content_type()
@@ -45,12 +63,12 @@ def _get_body(msg: Message) -> tuple[str, str]:
             if "attachment" in disposition:
                 continue  # skip attachments for now, not analyzing files
 
+            if part.is_multipart():
+                continue
             try:
-                payload = part.get_payload(decode=True)
-                if payload is None:
+                decoded = _decode(part)
+                if decoded is None:
                     continue
-                charset = part.get_content_charset() or "utf-8"
-                decoded = payload.decode(charset, errors="replace")
             except Exception:
                 continue
 
@@ -61,9 +79,7 @@ def _get_body(msg: Message) -> tuple[str, str]:
     else:
         content_type = msg.get_content_type()
         try:
-            payload = msg.get_payload(decode=True)
-            charset = msg.get_content_charset() or "utf-8"
-            decoded = payload.decode(charset, errors="replace") if payload else ""
+            decoded = _decode(msg) or ""
         except Exception:
             decoded = str(msg.get_payload())
 

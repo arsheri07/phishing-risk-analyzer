@@ -7,8 +7,9 @@ call transcript, or app listing — get an instant, fully-explained risk
 assessment. Five analysis modules share one scoring engine:
 
 - **Email** — SPF/DKIM/DMARC signals from mail-provider headers, with
-  optional DNS and cryptographic DKIM deep checks; lookalike-domain
-  detection on every link; urgency-language scoring
+  optional DNS and cryptographic DKIM deep checks; lookalike-domain and
+  IDN homograph detection on every link; links whose visible text lies
+  about where they go; urgency-language scoring
 - **Website** — domain age, SSL certificate validity, redirect chain
   length, scam-payment-language, optional Google Safe Browsing lookup,
   plus the same lookalike-domain detection reused from email
@@ -20,6 +21,11 @@ assessment. Five analysis modules share one scoring engine:
 - **App Listing** — unrealistic financial claims, permission requests
   that don't match the app's own stated purpose, generic
   auto-generated developer names
+
+Every check you run lands in a **case log** for the session, so you can
+compare the email, the link inside it, and the text that came with it side
+by side, and **copy report** turns any verdict into plain text you can paste
+into a ticket to IT or send to whoever forwarded you the message.
 
 A companion browser extension lets you check the current tab's URL
 without leaving your browser.
@@ -42,12 +48,13 @@ adding four more modules take a fraction of the time the first one did.
 
 **Email:** SPF, DKIM, and DMARC results from the message's
 `Authentication-Results` header; optional deep checking of DNS records and
-the DKIM cryptographic signature; typosquatting/combosquatting on every link;
+the DKIM cryptographic signature; typosquatting/combosquatting on every link; IDN homograph links;
+deceptive link text (the anchor says `paypal.com`, the href goes elsewhere);
 Reply-To/From mismatch; urgency/pressure language.
 
 **Website:** domain age via WHOIS, SSL certificate presence, redirect
 chain length, scam-payment language, optional Google Safe Browsing
-threat lookup, typosquat/combosquat detection.
+threat lookup, typosquat/combosquat and IDN homograph detection.
 
 **Text Message:** smishing phrases ("your package is on hold," "claim
 your prize"), OTP-forwarding requests specifically (the core mechanism
@@ -63,6 +70,27 @@ parentheses, or dashes.
 profit," "100% guaranteed"), permission requests mismatched against
 the app's own stated purpose (a flashlight app asking for contacts and
 SMS access), generic/auto-generated developer names.
+
+## Catching lookalike letters (IDN homographs)
+
+Edit distance catches `paypa1.com`. It can't catch `pаypal.com`, where
+the `а` is Cyrillic (U+0430): it renders identically, travels as punycode
+(`xn--pypal-4ve.com`), and an all-Cyrillic fake like `аррӏе.com` is five edits
+away from `apple`.
+
+So every link domain is decoded from punycode and reduced to a
+**confusable skeleton**, the same idea browsers use (Unicode TR39): each
+Cyrillic or Greek lookalike is mapped to the Latin letter it imitates, and
+the skeleton is matched exactly against the brand list. A match scores 40 and
+says plainly what happened; a name that merely mixes alphabets scores 15. A
+genuine single-script domain like `пример.рф` stays quiet.
+
+Building this exposed a real bug upstream. Python's `email` package
+re-encodes non-ASCII body text as `\uXXXX` escapes when a pasted message has
+no transfer encoding, so the Cyrillic letter never reached the detector at
+all. The parser now reads 7bit/8bit bodies as text directly, and a
+regression test pins it. An email with a homograph link and *passing*
+SPF/DKIM/DMARC went from SAFE to DANGEROUS (65).
 
 ## Optional: Google Safe Browsing integration
 
@@ -92,8 +120,8 @@ Open `http://localhost:5000`. Every tab has a "load a sample" button.
 ```bash
 python3 -m pytest -v
 ```
-84 tests total, covering all five modules plus the Safe Browsing
-integration. Network-dependent logic (DNS, DKIM, WHOIS, Safe Browsing)
+101 tests total, covering all five modules, homograph and deceptive-link
+detection, plus the Safe Browsing integration. Network-dependent logic (DNS, DKIM, WHOIS, Safe Browsing)
 is tested against mocked responses rather than live calls - this keeps
 the suite fast, reliable, and independent of network conditions,
 while still proving the actual scoring logic is correct.
@@ -157,7 +185,6 @@ behavior, not a bug, if it feels slow on a cold start.
   reliable free-tier speech-to-text option is available)
 - Full APK static analysis for the App Listing module, beyond listing
   text alone
-- A shared "case history" view across all five modules in one session
 - Publish the browser extension to the Chrome Web Store
 
 ---

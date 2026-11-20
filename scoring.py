@@ -93,11 +93,40 @@ def score_auth_results(auth_result) -> list:
     return reasons
 
 
+def homograph_reason(domain: str, unicode_domain: str, target: str) -> ScoreReason:
+    """Shared by email, SMS and website so all three explain it the same way."""
+    shown = f"'{unicode_domain}'" + (f" (really '{domain}')" if domain != unicode_domain else "")
+    return ScoreReason(
+        40,
+        f"Domain {shown} is spelled with non-Latin lookalike letters to appear as "
+        f"'{target}' - an IDN homograph attack"
+    )
+
+
+def mixed_script_reason(unicode_domain: str) -> ScoreReason:
+    return ScoreReason(
+        15,
+        f"Domain '{unicode_domain}' mixes alphabets (e.g. Latin and Cyrillic) in one "
+        f"name - legitimate domains almost never do this"
+    )
+
+
 def score_links(link_findings: list) -> list:
     """Turns link analysis findings into scored, explained reasons."""
     reasons = []
 
     for finding in link_findings:
+        if finding.is_homograph:
+            reasons.append(homograph_reason(finding.domain, finding.unicode_domain,
+                                            finding.homograph_target))
+        elif finding.is_mixed_script:
+            reasons.append(mixed_script_reason(finding.unicode_domain))
+        if finding.display_domain:
+            reasons.append(ScoreReason(
+                25,
+                f"Link text shows '{finding.display_domain}' but the link actually opens "
+                f"'{finding.domain}' - the visible address is a disguise"
+            ))
         if finding.is_typosquat:
             reasons.append(ScoreReason(
                 30,

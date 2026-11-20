@@ -454,3 +454,69 @@ h1 {
     flex-shrink: 0;
   }
 }
+
+
+/* ============================================================
+   COPY REPORT + CASE LOG
+   ============================================================ */
+.verdict-row { flex-wrap: wrap; }
+.copy-report-btn {
+  margin-left: auto;
+  align-self: center;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.copy-report-btn:hover { background: var(--paper-2); }
+.copy-report-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.case-log { margin-top: 48px; }
+.case-log-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.case-log-note { margin: 4px 0 14px; font-size: 13px; color: var(--ink-soft); }
+.case-log-list {
+  list-style: none; margin: 0; padding: 0;
+  border: 1px solid var(--line); border-radius: 8px; background: #fff;
+  overflow: hidden;
+}
+.case-log-list li + li { border-top: 1px solid var(--line-soft); }
+.case-row {
+  display: grid;
+  grid-template-columns: 72px 56px minmax(0, 1fr) auto;
+  gap: 12px; align-items: center;
+  width: 100%; padding: 12px 16px;
+  background: none; border: 0; text-align: left; cursor: pointer;
+  font: inherit; color: inherit;
+}
+.case-row:hover { background: var(--paper-2); }
+.case-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.case-time, .case-module { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+.case-subject { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.case-verdict {
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  padding: 3px 8px; border-radius: 4px; white-space: nowrap;
+}
+.case-verdict.safe { color: var(--safe); background: var(--safe-bg); }
+.case-verdict.suspicious { color: var(--warn); background: var(--warn-bg); }
+.case-verdict.dangerous { color: var(--danger); background: var(--danger-bg); }
+
+@media (max-width: 640px) {
+  .case-row { grid-template-columns: auto auto 1fr; row-gap: 4px; }
+  .case-time { grid-column: 1; grid-row: 1; }
+  .case-module { grid-column: 2; grid-row: 1; }
+  .case-verdict { grid-column: 3; grid-row: 1; justify-self: end; }
+  .case-subject { grid-column: 1 / -1; grid-row: 2; }
+  .copy-report-btn { margin-left: 0; }
+}
+
+/* The full project name is longer than the old one; keep the top bar on one line on phones */
+.topbar-actions .clear-btn, .topbar-actions .repo-link { white-space: nowrap; }
+@media (max-width: 420px) {
+  .brand-name { font-size: 12px; letter-spacing: 0.04em; }
+  .topbar { gap: 14px; }
+  .topbar-actions { gap: 10px; }
+}

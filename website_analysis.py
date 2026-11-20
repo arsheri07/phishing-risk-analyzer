@@ -3,7 +3,7 @@ website_analysis.py
 --------------------
 Analyzes a URL for scam website indicators. Reuses the same
 lookalike-domain detection and urgency-language scoring built for
-Email Forensics, and adds checks specific to live websites:
+the Email module, and adds checks specific to live websites:
 
 - Domain age (via WHOIS) - scam sites are almost always registered
   very recently, since they get taken down and replaced constantly
@@ -28,8 +28,8 @@ from urllib.parse import urljoin, urlparse
 import requests
 import whois as whois_lib
 
-from link_analysis import check_typosquat, check_combosquat
-from scoring import ScoreReason, score_urgency_language
+from link_analysis import check_typosquat, check_combosquat, check_homograph
+from scoring import ScoreReason, score_urgency_language, homograph_reason, mixed_script_reason
 
 
 @dataclass
@@ -222,9 +222,16 @@ def score_payment_language(page_text: str) -> list:
 
 def score_domain_lookalike(domain: str) -> list:
     """Reuses the exact typosquat/combosquat detectors built for
-    Email Forensics - a lookalike domain is just as strong a signal on
+    the Email module - a lookalike domain is just as strong a signal on
     a website as it is in an email link."""
     reasons = []
+    is_homo, homo_target, unicode_domain, mixed = check_homograph(domain)
+    if is_homo:
+        # The more specific finding; skip the typosquat check so the same
+        # swapped letter isn't counted twice.
+        return [homograph_reason(domain, unicode_domain, homo_target)]
+    if mixed:
+        reasons.append(mixed_script_reason(unicode_domain))
     is_typo, target, distance = check_typosquat(domain)
     if is_typo:
         reasons.append(ScoreReason(

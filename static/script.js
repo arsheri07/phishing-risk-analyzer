@@ -97,7 +97,11 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+let currentCase = null;   // the verdict on screen right now, for copy/log
+let restoringCase = false; // true while reopening a logged case (don't re-log it)
+
 function renderVerdict(verdict, score) {
+  currentCase = { verdict, score };
   const stamp = document.getElementById('stamp');
   const stampText = document.getElementById('stamp-text');
   stamp.className = 'stamp ' + verdict.toLowerCase();
@@ -109,6 +113,7 @@ function renderVerdict(verdict, score) {
 }
 
 function renderReasons(reasons) {
+  if (currentCase && !restoringCase) recordCase(reasons);
   const reasonsList = document.getElementById('reasons-list');
   if (reasons.length === 0) {
     reasonsList.innerHTML = '<li class="no-reasons">No suspicious signals found. This looks clean.</li>';
@@ -183,6 +188,9 @@ function renderEmailResults(data) {
   } else {
     linksList.innerHTML = data.links.map(link => {
       const flags = [];
+      if (link.is_homograph) flags.push(`<span class="pill fail">fake ${escapeHtml(link.homograph_target)} (lookalike letters: ${escapeHtml(link.unicode_domain)})</span>`);
+      else if (link.is_mixed_script) flags.push(`<span class="pill fail">mixed alphabets</span>`);
+      if (link.display_domain) flags.push(`<span class="pill fail">text says ${escapeHtml(link.display_domain)}</span>`);
       if (link.is_typosquat) flags.push(`<span class="pill fail">looks like ${escapeHtml(link.typosquat_target)}</span>`);
       if (link.is_combosquat) flags.push(`<span class="pill fail">contains "${escapeHtml(link.combosquat_target)}"</span>`);
       if (link.is_ip_address) flags.push(`<span class="pill fail">raw IP address</span>`);
@@ -372,3 +380,130 @@ analyzeAppBtn.addEventListener('click', async () => {
     analyzeAppBtn.textContent = 'Analyze listing';
   }
 });
+
+
+// ---------- Case log + copy report ----------
+// Every analysis is logged so you can compare a suspicious email, the link
+// inside it, and the text that came with it side by side. The log lives in
+// sessionStorage: it never leaves the browser and is gone when the tab closes.
+// Only a short subject line is kept, never the full pasted content.
+const CASE_LOG_KEY = 'phishingRiskAnalyzer.caseLog';
+const MODULE_NAMES = { email: 'Email', website: 'Website', sms: 'Text', phone: 'Call', app: 'App' };
+const caseLogSection = document.getElementById('case-log');
+const caseLogList = document.getElementById('case-log-list');
+
+function readLog() {
+  try { return JSON.parse(sessionStorage.getItem(CASE_LOG_KEY)) || []; }
+  catch (e) { return []; }
+}
+
+function writeLog(log) {
+  try { sessionStorage.setItem(CASE_LOG_KEY, JSON.stringify(log)); } catch (e) { /* private mode */ }
+}
+
+function clip(text, n = 60) {
+  const t = (text || '').replace(/\s+/g, ' ').trim();
+  return t.length > n ? t.slice(0, n - 1) + '…' : t;
+}
+
+function caseSubject(module) {
+  const val = id => document.getElementById(id).value;
+  switch (module) {
+    case 'email': {
+      const m = val('email-input').match(/^Subject:\s*(.+)$/mi);
+      return clip(m ? m[1] : val('email-input'));
+    }
+    case 'website': return clip(val('url-input'), 80);
+    case 'sms': return clip(val('sms-input'));
+    case 'phone': return clip(val('phone-number-input') || val('phone-input'));
+    case 'app': return clip(val('app-name-input') || val('app-description-input'));
+    default: return '';
+  }
+}
+
+function recordCase(reasons) {
+  const module = document.querySelector('.tab.active').dataset.tab;
+  const entry = {
+    id: document.getElementById('case-number').textContent + '-' + (readLog().length + 1),
+    module,
+    subject: caseSubject(module),
+    verdict: currentCase.verdict,
+    score: currentCase.score,
+    reasons: reasons.map(r => ({ points: r.points, reason: r.reason })),
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+  };
+  currentCase = entry;
+  const log = readLog();
+  log.unshift(entry);
+  writeLog(log.slice(0, 25));
+  renderLog();
+}
+
+function renderLog() {
+  const log = readLog();
+  caseLogSection.classList.toggle('hidden', log.length === 0);
+  caseLogList.innerHTML = log.map((c, i) => `
+    <li>
+      <button type="button" class="case-row" data-index="${i}">
+        <span class="case-time">${escapeHtml(c.time)}</span>
+        <span class="case-module">${escapeHtml(MODULE_NAMES[c.module] || c.module)}</span>
+        <span class="case-subject">${escapeHtml(c.subject || '(no subject)')}</span>
+        <span class="case-verdict ${escapeHtml(String(c.verdict).toLowerCase())}">${escapeHtml(c.verdict)} · ${Number(c.score)}</span>
+      </button>
+    </li>`).join('');
+}
+
+caseLogList.addEventListener('click', e => {
+  const row = e.target.closest('.case-row');
+  if (!row) return;
+  const c = readLog()[Number(row.dataset.index)];
+  if (!c) return;
+  restoringCase = true;
+  renderVerdict(c.verdict, c.score);
+  currentCase = c;
+  document.getElementById('summary-title').textContent = '01 — Case';
+  document.getElementById('summary-fields').innerHTML = `
+    <div><dt>Type</dt><dd>${escapeHtml(MODULE_NAMES[c.module] || c.module)}</dd></div>
+    <div><dt>Subject</dt><dd>${escapeHtml(c.subject || '(none)')}</dd></div>
+    <div><dt>Checked at</dt><dd>${escapeHtml(c.time)}</dd></div>`;
+  setResultCards();
+  renderReasons(c.reasons);
+  restoringCase = false;
+  errorBox.classList.add('hidden');
+  resultsSection.classList.remove('hidden');
+  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.getElementById('clear-log-btn').addEventListener('click', () => {
+  writeLog([]);
+  renderLog();
+});
+
+// Plain-text report: something you can paste into a ticket to IT, or send to
+// the relative who forwarded you the message.
+function reportText(c) {
+  const lines = [
+    `Phishing Risk Analyzer report`,
+    `Type: ${MODULE_NAMES[c.module] || c.module}`,
+    c.subject ? `Subject: ${c.subject}` : null,
+    `Verdict: ${c.verdict} (risk score ${c.score}/100)`,
+    '',
+    c.reasons.length ? 'Why:' : 'No suspicious signals found.',
+    ...c.reasons.map(r => `  +${r.points}  ${r.reason}`),
+  ];
+  return lines.filter(l => l !== null).join('\n');
+}
+
+const copyBtn = document.getElementById('copy-report-btn');
+copyBtn.addEventListener('click', async () => {
+  if (!currentCase || !currentCase.reasons) return;
+  try {
+    await navigator.clipboard.writeText(reportText(currentCase));
+    copyBtn.textContent = 'copied ✓';
+  } catch (e) {
+    copyBtn.textContent = 'copy failed';
+  }
+  setTimeout(() => { copyBtn.textContent = 'copy report'; }, 1600);
+});
+
+renderLog();
